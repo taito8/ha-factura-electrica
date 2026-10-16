@@ -1,0 +1,261 @@
+# =====================================================================
+#  Factura eléctrica · estimador para Home Assistant
+#
+#  Modelo de la factura:
+#    cargo fijo diario
+#    + energía en dos bloques (base hasta un límite mensual, excedente por encima)
+#    + cargo por kWh (CTT u otro)
+#    -> x (1 + impuestos %)
+#    + tasa fija (alumbrado público u otra)
+#
+#  Probado contra una factura real T1R2 residencial de Edelap (Argentina):
+#  diferencia de +0,4 % entre el modelo y el total facturado.
+#
+#  INSTALACIÓN: copiá este archivo a /config/packages/factura_electrica.yaml
+#  Guía completa: docs/instalacion.md
+#
+#  LO ÚNICO QUE TENÉS QUE EDITAR: las 4 líneas marcadas "<-- CAMBIAR"
+#  (están en el bloque de arriba de todo de la sección `template:`).
+# =====================================================================
+
+input_datetime:
+  factura_inicio_ciclo:
+    name: "Factura · Fecha de la última lectura"
+    has_date: true
+    has_time: false
+    icon: mdi:calendar-start
+
+input_number:
+  factura_cargo_fijo_diario:
+    name: "Factura · Cargo fijo diario"
+    min: 0
+    max: 100000
+    step: 0.01
+    mode: box
+    unit_of_measurement: "$/día"
+  factura_precio_bloque_base:
+    name: "Factura · Precio kWh bloque base"
+    min: 0
+    max: 100000
+    step: 0.001
+    mode: box
+    unit_of_measurement: "$/kWh"
+  factura_precio_excedente:
+    name: "Factura · Precio kWh excedente"
+    min: 0
+    max: 100000
+    step: 0.001
+    mode: box
+    unit_of_measurement: "$/kWh"
+  factura_limite_bloque:
+    name: "Factura · Límite bloque base (kWh/mes)"
+    min: 0
+    max: 2000
+    step: 1
+    mode: box
+    unit_of_measurement: "kWh"
+  factura_ctt_kwh:
+    name: "Factura · Cargo por kWh (CTT u otro)"
+    min: 0
+    max: 10000
+    step: 0.01
+    mode: box
+    unit_of_measurement: "$/kWh"
+  factura_impuestos_pct:
+    name: "Factura · Impuestos totales"
+    min: 0
+    max: 100
+    step: 0.001
+    mode: box
+    unit_of_measurement: "%"
+  factura_alumbrado:
+    name: "Factura · Tasa fija (alumbrado público u otra)"
+    min: 0
+    max: 1000000
+    step: 0.01
+    mode: box
+    unit_of_measurement: "$"
+  factura_dias_ciclo:
+    name: "Factura · Días del ciclo"
+    min: 25
+    max: 40
+    step: 1
+    mode: box
+    unit_of_measurement: "días"
+  factura_ajuste_kwh:
+    name: "Factura · kWh no medidos por tu sensor"
+    min: 0
+    max: 5000
+    step: 0.1
+    mode: box
+    unit_of_measurement: "kWh"
+
+utility_meter:
+  factura_medido_ciclo:
+    unique_id: factura_medido_ciclo
+    source: sensor.factura_energia_total
+    # Sin 'cycle' a propósito: las distribuidoras no leen el medidor siempre el
+    # mismo día. El contador se reinicia con el script "Iniciar nuevo ciclo".
+
+script:
+  factura_nuevo_ciclo:
+    alias: "Factura · Iniciar nuevo ciclo (hoy)"
+    icon: mdi:restart
+    sequence:
+      - action: utility_meter.reset
+        target: { entity_id: sensor.factura_medido_ciclo }
+      - action: input_datetime.set_datetime
+        target: { entity_id: input_datetime.factura_inicio_ciclo }
+        data:
+          date: "{{ now().date() }}"
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_ajuste_kwh }
+        data: { value: 0 }
+
+template:
+  - sensor:
+      # ┌────────────────────────────────────────────────────────────────┐
+      # │  CONFIGURÁ ESTO — reemplazá los dos sensores de ejemplo        │
+      # │  (sensor.mi_medidor_*) por los tuyos. Con buscar y reemplazar  │
+      # │  de todo el archivo alcanza.                                   │
+      # │                                                                │
+      # │  · Energía: sensor de kWh ACUMULADOS (no de potencia).         │
+      # │    Si el tuyo está en Wh, cambiá `| float` por                 │
+      # │    `| float / 1000` en la línea de `state`.                    │
+      # │  · Potencia: sensor de potencia instantánea, en W o en kW      │
+      # │    (se detecta solo). Es opcional: solo alimenta la tarjeta    │
+      # │    "Costo por hora".                                           │
+      # └────────────────────────────────────────────────────────────────┘
+      - name: "Factura · Energía total"
+        unique_id: factura_energia_total
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total_increasing
+        availability: "{{ has_value('sensor.mi_medidor_energia_total') }}"  # <-- CAMBIAR (1/4)
+        state: "{{ states('sensor.mi_medidor_energia_total') | float }}"  # <-- CAMBIAR (2/4)
+
+      - name: "Factura · Potencia"
+        unique_id: factura_potencia
+        unit_of_measurement: kW
+        device_class: power
+        state_class: measurement
+        availability: "{{ has_value('sensor.mi_medidor_potencia') }}"  # <-- CAMBIAR (3/4)
+        state: >
+          {% set origen = 'sensor.mi_medidor_potencia' %}
+          {% set p = states(origen) | float %}
+          {% set kw = p / 1000 if state_attr(origen, 'unit_of_measurement') == 'W' else p %}
+          {{ kw | round(3) }}
+        # ^ CAMBIAR (4/4): la línea `{% set origen = ... %}`
+
+      # ── De acá para abajo no hace falta tocar nada ──────────────────
+
+      - name: "Factura · Días transcurridos"
+        unique_id: factura_dias_transcurridos
+        unit_of_measurement: "días"
+        icon: mdi:calendar-clock
+        availability: >
+          {{ states('input_datetime.factura_inicio_ciclo') not in ['unknown', 'unavailable', ''] }}
+        state: >
+          {% set ini = states('input_datetime.factura_inicio_ciclo') | as_datetime %}
+          {% set d = (now().date() - ini.date()).days + (now().hour * 60 + now().minute) / 1440 %}
+          {{ [d, 0.01] | max | round(2) }}
+
+      - name: "Factura · Consumo del ciclo"
+        unique_id: factura_consumo_del_ciclo
+        unit_of_measurement: "kWh"
+        icon: mdi:counter
+        state: >
+          {{ (states('sensor.factura_medido_ciclo') | float(0)
+              + states('input_number.factura_ajuste_kwh') | float(0)) | round(2) }}
+
+      - name: "Factura · Consumo diario promedio"
+        unique_id: factura_consumo_diario_promedio
+        unit_of_measurement: "kWh/día"
+        icon: mdi:chart-line
+        availability: "{{ has_value('sensor.factura_dias_transcurridos') }}"
+        state: >
+          {% set d = [states('sensor.factura_dias_transcurridos') | float(1), 1] | max %}
+          {{ (states('sensor.factura_consumo_del_ciclo') | float(0) / d) | round(2) }}
+
+      - name: "Factura · Límite diario bloque base"
+        unique_id: factura_limite_diario_bloque_base
+        unit_of_measurement: "kWh/día"
+        icon: mdi:speedometer-medium
+        # 30.4167 = 365 / 12, días promedio de un mes
+        state: >
+          {{ (states('input_number.factura_limite_bloque') | float(300) / 30.4167) | round(2) }}
+
+      - name: "Factura · Consumo proyectado"
+        unique_id: factura_consumo_proyectado
+        unit_of_measurement: "kWh"
+        icon: mdi:crystal-ball
+        availability: "{{ has_value('sensor.factura_consumo_diario_promedio') }}"
+        state: >
+          {{ (states('sensor.factura_consumo_diario_promedio') | float(0)
+              * states('input_number.factura_dias_ciclo') | float(31)) | round(0) }}
+
+      - name: "Factura · Proyectada"
+        unique_id: factura_proyectada
+        device_class: monetary
+        unit_of_measurement: "ARS"
+        icon: mdi:receipt-text-clock
+        availability: "{{ has_value('sensor.factura_consumo_proyectado') }}"
+        state: >
+          {% set fijo = states('input_number.factura_cargo_fijo_diario') | float(0) %}
+          {% set pb = states('input_number.factura_precio_bloque_base') | float(0) %}
+          {% set pe = states('input_number.factura_precio_excedente') | float(0) %}
+          {% set ctt = states('input_number.factura_ctt_kwh') | float(0) %}
+          {% set imp = states('input_number.factura_impuestos_pct') | float(0) / 100 %}
+          {% set alum = states('input_number.factura_alumbrado') | float(0) %}
+          {% set lim = states('input_number.factura_limite_bloque') | float(300) %}
+          {% set dc = states('input_number.factura_dias_ciclo') | float(31) %}
+          {% set kwh = states('sensor.factura_consumo_proyectado') | float(0) %}
+          {% set umbral = lim * dc / 30.4167 %}
+          {% set neto = fijo * dc + pb * ([kwh, umbral] | min) + pe * ([kwh - umbral, 0] | max) + ctt * kwh %}
+          {{ (neto * (1 + imp) + alum) | round(0) }}
+
+      - name: "Factura · Gasto a la fecha"
+        unique_id: factura_gasto_a_la_fecha
+        device_class: monetary
+        unit_of_measurement: "ARS"
+        icon: mdi:cash-clock
+        availability: "{{ has_value('sensor.factura_dias_transcurridos') }}"
+        state: >
+          {% set fijo = states('input_number.factura_cargo_fijo_diario') | float(0) %}
+          {% set pb = states('input_number.factura_precio_bloque_base') | float(0) %}
+          {% set pe = states('input_number.factura_precio_excedente') | float(0) %}
+          {% set ctt = states('input_number.factura_ctt_kwh') | float(0) %}
+          {% set imp = states('input_number.factura_impuestos_pct') | float(0) / 100 %}
+          {% set alum = states('input_number.factura_alumbrado') | float(0) %}
+          {% set lim = states('input_number.factura_limite_bloque') | float(300) %}
+          {% set dc = states('input_number.factura_dias_ciclo') | float(31) %}
+          {% set d = states('sensor.factura_dias_transcurridos') | float(0) %}
+          {% set kwh = states('sensor.factura_consumo_del_ciclo') | float(0) %}
+          {% set umbral = lim * d / 30.4167 %}
+          {% set neto = fijo * d + pb * ([kwh, umbral] | min) + pe * ([kwh - umbral, 0] | max) + ctt * kwh %}
+          {{ (neto * (1 + imp) + alum * d / dc) | round(0) }}
+
+      - name: "Factura · Precio del próximo kWh"
+        unique_id: factura_precio_del_proximo_kwh
+        unit_of_measurement: "ARS/kWh"
+        icon: mdi:cash-plus
+        availability: "{{ has_value('sensor.factura_consumo_proyectado') }}"
+        state: >
+          {% set imp = states('input_number.factura_impuestos_pct') | float(0) / 100 %}
+          {% set ctt = states('input_number.factura_ctt_kwh') | float(0) %}
+          {% set umbral = states('input_number.factura_limite_bloque') | float(300)
+                          * states('input_number.factura_dias_ciclo') | float(31) / 30.4167 %}
+          {% set p = states('input_number.factura_precio_excedente') | float(0)
+                     if states('sensor.factura_consumo_proyectado') | float(0) > umbral
+                     else states('input_number.factura_precio_bloque_base') | float(0) %}
+          {{ ((p + ctt) * (1 + imp)) | round(2) }}
+
+      - name: "Factura · Costo por hora ahora"
+        unique_id: factura_costo_por_hora_ahora
+        unit_of_measurement: "ARS/h"
+        icon: mdi:timer-sand
+        availability: >
+          {{ has_value('sensor.factura_potencia') and has_value('sensor.factura_precio_del_proximo_kwh') }}
+        state: >
+          {{ (states('sensor.factura_potencia') | float(0)
+              * states('sensor.factura_precio_del_proximo_kwh') | float(0)) | round(0) }}

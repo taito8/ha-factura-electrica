@@ -1,0 +1,51 @@
+# Instalación paso a paso
+
+## 1. Habilitar packages
+
+En `/config/configuration.yaml` tiene que estar:
+
+```yaml
+homeassistant:
+  packages: !include_dir_named packages
+```
+
+Si ya tenés un bloque `homeassistant:` agregá solo la línea `packages:` adentro. Después creá la carpeta `/config/packages/` si no existe (editor de archivos o add-on Samba/File editor).
+
+## 2. Identificar tus sensores
+
+En **Herramientas para desarrolladores → Estados** buscá:
+
+- **Energía acumulada**: unidad `kWh`, valor que solo sube (por ejemplo `sensor.xxx_total_energy`). Si está en `Wh`, ver más abajo.
+- **Potencia instantánea** (opcional): unidad `W` o `kW`.
+
+Si no tenés ninguno, necesitás algún medidor (térmica inteligente, enchufe/medidor Shelly, Sonoff, pinza amperométrica, módulo del tablero, etc.).
+
+## 3. Copiar y editar el paquete
+
+1. Copiá `packages/factura_electrica.yaml` a `/config/packages/`.
+2. Reemplazá `sensor.mi_medidor_energia_total` por tu sensor de energía y `sensor.mi_medidor_potencia` por el de potencia (4 líneas marcadas `CAMBIAR`).
+3. Si tu sensor de energía está en **Wh**: en la línea `state` de "Factura · Energía total" cambiá `| float` por `| float / 1000`.
+4. Si no tenés sensor de potencia, dejalo igual: solo la tarjeta de costo por hora quedará "no disponible".
+
+## 4. Cargar tu tarifa
+
+Seguí [como-leer-tu-factura.md](como-leer-tu-factura.md), completá una copia de `tarifas/_plantilla.yaml` y guardala en `/config/packages/`. (O usá el ejemplo Edelap si es tu caso: valores de otra factura, verificá con la tuya.)
+
+> Dejá **un solo** archivo de tarifa en `packages/`; todos definen el mismo script y se pisarían.
+
+## 5. Reiniciar y comprobar
+
+**Ajustes → Sistema → Reiniciar** (antes, *Herramientas para desarrolladores → YAML → Comprobar configuración*). Después deberías ver entidades `sensor.factura_*` e `input_number.factura_*`.
+
+## 6. El tablero
+
+Pegá `dashboard/energia.yaml` como se explica en su encabezado. Los enlaces de navegación asumen el tablero por defecto (`/lovelace/...`).
+
+## 7. Primer uso
+
+1. En **Tarifa y ciclo**, apretá **Cargar tarifa del archivo** y confirmá.
+2. Poné en **Fecha última lectura** el día en que la distribuidora leyó el medidor la última vez (figura en la factura).
+3. Si empezaste a medir después de esa lectura, cargá en **kWh no medidos** los kWh de esos días hasta que empezaste (sacalos de tu factura anterior o estimalos). Es lo que hace que el acumulado coincida con el medidor oficial.
+4. Cuando llegue la próxima lectura: **Iniciar nuevo ciclo (hoy)**.
+
+El contador `utility_meter` empieza de cero al instalarlo, así que las proyecciones se estabilizan después de unos días.

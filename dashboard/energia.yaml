@@ -1,0 +1,165 @@
+# Dashboard de energía (cards nativas, sin HACS).
+#
+# Dos formas de usarlo:
+#   A) Tablero nuevo: Ajustes > Paneles > Añadir panel > Nuevo tablero desde cero >
+#      tres puntos > Editar en YAML (configuración sin procesar) > pegá TODO este archivo.
+#   B) Sumarlo a un tablero que ya tenés: en su YAML sin procesar copiá las dos
+#      vistas (de "- title: Energía" hasta el final) dentro de tu lista `views:`.
+#
+# Las rutas /lovelace/energia y /lovelace/tarifa-electrica asumen el tablero
+# por defecto. Si usás otro tablero, cambiá el prefijo en `navigation_path` y `back_path`.
+
+views:
+  - title: Energía
+    path: energia
+    icon: mdi:lightning-bolt
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Factura del ciclo
+            heading_style: title
+            icon: mdi:receipt-text-clock
+          - type: tile
+            entity: sensor.factura_proyectada
+            name: Factura proyectada
+            grid_options:
+              columns: 12
+          - type: tile
+            entity: sensor.factura_gasto_a_la_fecha
+            name: Gastado a la fecha
+          - type: tile
+            entity: sensor.factura_dias_transcurridos
+            name: Días del ciclo
+          - type: tile
+            entity: sensor.factura_consumo_del_ciclo
+            name: Consumo del ciclo
+          - type: tile
+            entity: sensor.factura_consumo_proyectado
+            name: Proyectado
+          - type: gauge
+            entity: sensor.factura_consumo_diario_promedio
+            name: Ritmo diario (kWh/día)
+            min: 0
+            max: 30
+            needle: true
+            # 9.9 = límite del bloque base de 300 kWh/mes dividido 30,4 días.
+            # Si tu límite es otro, recalculalo: ver sensor.factura_limite_diario_bloque_base
+            severity:
+              green: 0
+              yellow: 9.9
+              red: 15
+            grid_options:
+              columns: 12
+          - type: button
+            name: Tarifa y ciclo
+            icon: mdi:receipt-text-edit
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace/tarifa-electrica
+            grid_options:
+              columns: 12
+              rows: 1
+      - type: grid
+        cards:
+          - type: heading
+            heading: Ahora
+            heading_style: title
+            icon: mdi:flash
+          - type: tile
+            entity: sensor.factura_potencia
+            name: Potencia
+          - type: tile
+            entity: sensor.factura_costo_por_hora_ahora
+            name: Costo por hora
+          - type: tile
+            entity: sensor.factura_precio_del_proximo_kwh
+            name: Próximo kWh
+            grid_options:
+              columns: 12
+          - type: statistics-graph
+            title: Consumo diario (kWh)
+            entities:
+              - sensor.factura_energia_total
+            stat_types:
+              - change
+            period: day
+            days_to_show: 35
+            chart_type: bar
+            grid_options:
+              columns: 12
+
+  - title: Tarifa y ciclo
+    path: tarifa-electrica
+    subview: true
+    back_path: /lovelace/energia
+    icon: mdi:receipt-text
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Ciclo de facturación
+            heading_style: title
+          - type: entities
+            show_header_toggle: false
+            grid_options:
+              columns: 12
+            entities:
+              - entity: input_datetime.factura_inicio_ciclo
+                name: Fecha última lectura
+              - entity: input_number.factura_dias_ciclo
+                name: Días del ciclo
+              - entity: input_number.factura_ajuste_kwh
+                name: kWh no medidos
+          - type: button
+            name: Iniciar nuevo ciclo (hoy)
+            icon: mdi:restart
+            grid_options:
+              columns: 12
+              rows: 1
+            tap_action:
+              action: perform-action
+              perform_action: script.factura_nuevo_ciclo
+              confirmation:
+                text: >-
+                  ¿Reiniciar el contador del ciclo? Usalo el día que la
+                  distribuidora toma la lectura del medidor.
+      - type: grid
+        cards:
+          - type: heading
+            heading: Cuadro tarifario
+            heading_style: title
+          - type: entities
+            show_header_toggle: false
+            grid_options:
+              columns: 12
+            entities:
+              - entity: input_number.factura_cargo_fijo_diario
+                name: Cargo fijo diario
+              - entity: input_number.factura_precio_bloque_base
+                name: Precio bloque base
+              - entity: input_number.factura_precio_excedente
+                name: Precio excedente
+              - entity: input_number.factura_limite_bloque
+                name: Límite bloque base
+              - entity: input_number.factura_ctt_kwh
+                name: Cargo por kWh (CTT u otro)
+              - entity: input_number.factura_impuestos_pct
+                name: Impuestos
+              - entity: input_number.factura_alumbrado
+                name: Tasa fija (alumbrado)
+          - type: button
+            name: Cargar tarifa del archivo
+            icon: mdi:file-document-refresh
+            grid_options:
+              columns: 12
+              rows: 1
+            tap_action:
+              action: perform-action
+              perform_action: script.factura_cargar_tarifa
+              confirmation:
+                text: Esto sobrescribe los valores de tarifa actuales.

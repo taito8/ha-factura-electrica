@@ -1,0 +1,38 @@
+# Ejemplo de tarifa: Edelap · T1R2 residencial · factura ciclo 2026-10
+# (lectura 23/07 al 24/08/2026). Los valores salen del detalle de ESA factura;
+# tu cuadro tarifario puede ser distinto (categoría, subsidios, período).
+#
+# Uso: copiá UN archivo de tarifa a /config/packages/ (junto al paquete
+# principal), reiniciá Home Assistant y tocá "Cargar tarifa del archivo" en el
+# tablero (o ejecutá script.factura_cargar_tarifa).
+# Para cambiar de tarifa, reemplazá el archivo; no dejes dos a la vez.
+
+script:
+  factura_cargar_tarifa:
+    alias: "Factura · Cargar tarifa (Edelap T1R2 2026-10)"
+    icon: mdi:file-document-refresh
+    sequence:
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_cargo_fijo_diario }
+        data: { value: 1185.38 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_precio_bloque_base }
+        data: { value: 119.121 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_precio_excedente }
+        data: { value: 182.759 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_limite_bloque }
+        data: { value: 300 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_ctt_kwh }
+        data: { value: 11.78 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_impuestos_pct }
+        data: { value: 32.511 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_alumbrado }
+        data: { value: 19266 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_dias_ciclo }
+        data: { value: 31 }
