@@ -6,6 +6,8 @@ Estimá en tiempo real cuánto te va a llegar de luz, mirando el consumo que ya 
 
 Lo armé para mi casa (Edelap, La Plata, categoría T1R2) y lo dejé genérico para que cualquiera en Argentina —o donde la factura tenga esta estructura— lo use con su propia tarifa.
 
+<p align="center"><img src="docs/img/tablero.png" alt="Tablero de energía" width="320"></p>
+
 ## Qué te muestra
 
 - **Factura proyectada** del ciclo, según tu ritmo de consumo actual.
@@ -17,6 +19,7 @@ Lo armé para mi casa (Edelap, La Plata, categoría T1R2) y lo dejé genérico p
 
 ## Qué necesitás
 
+0. **Home Assistant 2024.8 o más nuevo** (usa vistas `sections` y la sintaxis `action:`).
 1. Home Assistant con un sensor de **energía acumulada en kWh** (medidor inteligente, térmica Tuya/Shelly, pinza amperométrica, Sonoff POW, etc.). Idealmente también uno de potencia instantánea (opcional).
 2. Tu última factura, para sacar los valores de la tarifa ([guía](docs/como-leer-tu-factura.md)).
 
@@ -34,7 +37,7 @@ Lo armé para mi casa (Edelap, La Plata, categoría T1R2) y lo dejé genérico p
 6. Creá el tablero con `dashboard/energia.yaml`.
 7. En el tablero: **Tarifa y ciclo → Cargar tarifa del archivo**, y el día de la lectura de tu medidor, **Iniciar nuevo ciclo**.
 
-Detalle paso a paso: [docs/instalacion.md](docs/instalacion.md).
+Detalle paso a paso: [docs/instalacion.md](docs/instalacion.md). Hardware con el que lo probé y alternativas: [docs/hardware.md](docs/hardware.md).
 
 ## Cómo calcula
 
@@ -67,7 +70,13 @@ Más casos en [docs/problemas-comunes.md](docs/problemas-comunes.md).
 
 ## Contribuir
 
+Si mantenés tu propia copia, mirá [docs/publicar-y-actualizar-github.md](docs/publicar-y-actualizar-github.md).
+
 ¿Tenés otra distribuidora o categoría (EDESUR, EDENOR, EPEC, EPE...)? Copiá `tarifas/_plantilla.yaml`, completalo y mandá un Pull Request **sin datos personales** (nada de número de cliente ni de medidor). Si el modelo no te cierra con tu factura, abrí un Issue con la estructura (sin montos personales) y lo vemos.
+
+## Versiones
+
+Ver [CHANGELOG.md](CHANGELOG.md).
 
 ## Licencia
 
