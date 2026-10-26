@@ -1,0 +1,37 @@
+# Plantilla para cargar TU tarifa. Copiala como, por ejemplo,
+# tarifas/<distribuidora>_<categoria>_<AAAA-MM>.yaml, completá los 8 valores
+# y dejala en /config/packages/. Cómo sacar cada valor de la factura:
+# docs/como-leer-tu-factura.md
+#
+# Si querés compartirla con la comunidad, subí un Pull Request SIN datos
+# personales (nada de número de cliente, medidor ni montos de tu factura).
+
+script:
+  factura_cargar_tarifa:
+    alias: "Factura · Cargar tarifa (DISTRIBUIDORA CATEGORÍA AAAA-MM)"
+    icon: mdi:file-document-refresh
+    sequence:
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_cargo_fijo_diario }
+        data: { value: 0 }      # $ por día (cargo fijo / cargo comercial)
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_precio_bloque_base }
+        data: { value: 0 }      # $ por kWh dentro del bloque base
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_precio_excedente }
+        data: { value: 0 }      # $ por kWh por encima del límite
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_limite_bloque }
+        data: { value: 300 }    # kWh/mes del bloque base (0 si tu tarifa no tiene bloques: poné el mismo precio en base y excedente)
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_ctt_kwh }
+        data: { value: 0 }      # $ por kWh de cargos adicionales (CTT, etc.); 0 si no aplica
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_impuestos_pct }
+        data: { value: 0 }      # % total de impuestos sobre el neto (IVA + otros)
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_alumbrado }
+        data: { value: 0 }      # $ fijos por ciclo (alumbrado público, tasas municipales)
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_dias_ciclo }
+        data: { value: 31 }     # días que dura tu ciclo de facturación

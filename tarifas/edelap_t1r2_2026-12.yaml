@@ -1,0 +1,47 @@
+# Ejemplo de tarifa: Edelap · T1R2 residencial con subsidio (segmento SEF)
+# Valores tomados de la factura del ciclo 2026-12 (lectura 23/09 al 23/10/2026,
+# 30 días, 254 kWh). Con estos valores el modelo da un +0,3 % sobre el total
+# facturado.
+#
+# Cómo salen los valores (los precios ya vienen con el subsidio aplicado):
+#   Cargo fijo diario = cargo fijo del ciclo / días = 14.807,41 / 30 = 493,58
+#     (en esta tarifa el cargo fijo varía un poco según cuántos kWh caen en cada
+#      escalón; 493,58 es el valor para unos 250 kWh/mes)
+#   Bloque base: 0 a 150 kWh a $98,7377
+#   Excedente:   de 150 a 300 kWh a $165,1251 (no vi el precio por encima de 300)
+#   Cargo por kWh (CTT): 3.172,31 / 254 kWh = 12,489 (cambia cada mes)
+#   Impuestos: IVA 21 + 6 + 4 + 5,5 + 0,001 = 36,501 %
+#   Tasa fija: alumbrado público $9.633
+#
+# Uso: copiá UN archivo de tarifa a /config/packages/, reiniciá y tocá
+# "Cargar tarifa del archivo" en el tablero.
+
+script:
+  factura_cargar_tarifa:
+    alias: "Factura · Cargar tarifa (Edelap T1R2 2026-12)"
+    icon: mdi:file-document-refresh
+    sequence:
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_cargo_fijo_diario }
+        data: { value: 493.58 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_precio_bloque_base }
+        data: { value: 98.7377 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_precio_excedente }
+        data: { value: 165.1251 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_limite_bloque }
+        data: { value: 150 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_ctt_kwh }
+        data: { value: 12.489 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_impuestos_pct }
+        data: { value: 36.501 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_alumbrado }
+        data: { value: 9633 }
+      - action: input_number.set_value
+        target: { entity_id: input_number.factura_dias_ciclo }
+        data: { value: 30 }
