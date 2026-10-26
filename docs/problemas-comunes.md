@@ -2,7 +2,7 @@
 
 **Los sensores `factura_*` no aparecen.** Revisá que `packages: !include_dir_named packages` esté bajo `homeassistant:` y que el archivo esté en `/config/packages/`. Corré *Comprobar configuración* y reiniciá.
 
-**"Factura · Energía total" figura no disponible.** El sensor de origen no existe o no tiene valor. Verificá el nombre en *Herramientas para desarrolladores → Estados*.
+**"Factura · Energía total" figura no disponible.** El sensor de origen no existe o no tiene valor. Verificá el nombre en *Configuración → Herramientas → Estados*.
 
 **Consumo absurdamente alto o bajo.** Probablemente tu sensor está en Wh (cambiá a `| float / 1000`) o mide solo una parte de la casa.
 

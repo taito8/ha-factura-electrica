@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.0.5] - 2026-10-26
+- Documentación: nombres de menú actualizados a Home Assistant reciente (Configuración → Herramientas, Aplicaciones, Tableros).
+
 ## [1.0.4] - 2026-10-26
 - Nueva guía `docs/facturas-de-referencia.md`: validación del modelo con las facturas de los ciclos 2026-10, 2026-11 y 2026-12.
 

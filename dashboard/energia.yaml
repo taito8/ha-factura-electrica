@@ -1,7 +1,7 @@
 # Dashboard de energía (cards nativas, sin HACS).
 #
 # Dos formas de usarlo:
-#   A) Tablero nuevo: Ajustes > Paneles > Añadir panel > Nuevo tablero desde cero >
+#   A) Tablero nuevo: Configuración > Tableros > Añadir tablero > Nuevo tablero desde cero >
 #      tres puntos > Editar en YAML (configuración sin procesar) > pegá TODO este archivo.
 #   B) Sumarlo a un tablero que ya tenés: en su YAML sin procesar copiá las dos
 #      vistas (de "- title: Energía" hasta el final) dentro de tu lista `views:`.

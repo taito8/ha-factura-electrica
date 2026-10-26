@@ -1,5 +1,7 @@
 # Instalación paso a paso
 
+> Los nombres de menú son los de Home Assistant reciente (**Configuración → Herramientas**, antes *Herramientas para desarrolladores*; **Aplicaciones**, antes *Add-ons*). En versiones viejas buscalos con esos nombres.
+
 ## 1. Habilitar packages
 
 En `/config/configuration.yaml` tiene que estar:
@@ -9,11 +11,11 @@ homeassistant:
   packages: !include_dir_named packages
 ```
 
-Si ya tenés un bloque `homeassistant:` agregá solo la línea `packages:` adentro. Después creá la carpeta `/config/packages/` si no existe (editor de archivos o add-on Samba/File editor).
+Si ya tenés un bloque `homeassistant:` agregá solo la línea `packages:` adentro. Después creá la carpeta `/config/packages/` si no existe (editor de archivos o aplicación Samba o File editor).
 
 ## 2. Identificar tus sensores
 
-En **Herramientas para desarrolladores → Estados** buscá:
+En **Configuración → Herramientas → Estados** buscá:
 
 - **Energía acumulada**: unidad `kWh`, valor que solo sube (por ejemplo `sensor.xxx_total_energy`). Si está en `Wh`, ver más abajo.
 - **Potencia instantánea** (opcional): unidad `W` o `kW`.
@@ -35,7 +37,7 @@ Seguí [como-leer-tu-factura.md](como-leer-tu-factura.md), completá una copia d
 
 ## 5. Reiniciar y comprobar
 
-**Ajustes → Sistema → Reiniciar** (antes, *Herramientas para desarrolladores → YAML → Comprobar configuración*). Después deberías ver entidades `sensor.factura_*` e `input_number.factura_*`.
+**Configuración → Sistema → Reiniciar** (antes, *Configuración → Herramientas → YAML → Comprobar configuración*). Después deberías ver entidades `sensor.factura_*` e `input_number.factura_*`.
 
 ## 6. El tablero
 
@@ -52,7 +54,7 @@ El contador `utility_meter` empieza de cero al instalarlo, así que las proyecci
 
 ## Si la factura llegó después de la lectura
 
-La distribuidora toma la lectura un día y la factura llega días más tarde. El ciclo nuevo empieza el día de la **lectura**, no el de la factura. Para reiniciarlo con esa fecha, andá a *Herramientas para desarrolladores → Acciones*, elegí `script.factura_nuevo_ciclo`, pasá a **modo YAML** y pegá:
+La distribuidora toma la lectura un día y la factura llega días más tarde. El ciclo nuevo empieza el día de la **lectura**, no el de la factura. Para reiniciarlo con esa fecha, andá a *Configuración → Herramientas → Acciones*, elegí `script.factura_nuevo_ciclo`, pasá a **modo YAML** y pegá:
 
 ```yaml
 action: script.factura_nuevo_ciclo
