@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.0.4] - 2026-10-26
+- Nueva guía `docs/facturas-de-referencia.md`: validación del modelo con las facturas de los ciclos 2026-10, 2026-11 y 2026-12.
+
 ## [1.0.3] - 2026-10-26
 - Licencia cambiada a MIT (uso libre, con mención del autor).
 

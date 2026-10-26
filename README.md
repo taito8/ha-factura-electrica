@@ -60,7 +60,7 @@ Con la factura real con la que lo calibré (550 kWh en 32 días) el modelo da un
 
 ## Limitaciones (leelas)
 
-- Es una **estimación**, no la factura. Probado con **una sola factura** T1R2 de Edelap.
+- Es una **estimación**, no la factura. Validado con **tres facturas** T1R2 de Edelap, con diferencias de 0 % a 0,4 % ([detalle](docs/facturas-de-referencia.md)).
 - Asumí que el cargo "CTT" se cobra por kWh; no pude confirmarlo con la distribuidora.
 - Las tarifas, subsidios y categorías cambian seguido: hay que cargar la tarifa nueva cuando cambie. Si tu categoría tiene otra estructura (demanda, horarios, bonificaciones), el modelo no la cubre tal cual.
 - Si tu sensor no mide **toda** la casa, o empezaste a medir a mitad de un ciclo, usá "kWh no medidos" para corregirlo.
